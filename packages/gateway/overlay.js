@@ -52,8 +52,19 @@
     var panelOpen = false;
     var wormkeyDownX = 0, wormkeyDownY = 0;
 
+    function detectTheme(){
+      var html = document.documentElement;
+      if (html.classList.contains('dark') || html.getAttribute('data-theme') === 'dark') return 'dark';
+      if (html.classList.contains('light') || html.getAttribute('data-theme') === 'light') return 'light';
+      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    function applyTheme(){
+      var t = detectTheme();
+      root.setAttribute('data-theme', t);
+    }
+
     var styleEl = document.createElement('style');
-    styleEl.textContent = '@keyframes tabbar-shield-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}#wormkey-overlay .tabbar-connected:hover .tabbar-shield{animation:tabbar-shield-spin .6s ease-in-out}#wormkey-overlay .tabbar-views .tabbar-eye{transform-origin:center;transition:transform .2s ease-out}#wormkey-overlay .tabbar-views:hover .tabbar-eye{transform:scaleY(.15)}#wormkey-overlay .tabbar-btn:hover{background:rgba(255,255,255,0.03)}#wormkey-overlay .tabbar-connected.tabbar-btn:hover,#wormkey-overlay .tabbar-views.tabbar-btn:hover{background:rgba(255,255,255,0.03)}@media(prefers-reduced-motion:reduce){#wormkey-overlay .tabbar-shield,#wormkey-overlay .tabbar-eye{animation:none!important;transition:none!important}}@media(max-width:480px){#wormkey-overlay{bottom:max(10px,env(safe-area-inset-bottom))!important;left:max(8px,env(safe-area-inset-left))!important;right:max(8px,env(safe-area-inset-right))!important;transform:none!important;width:auto!important;max-width:none!important}#wormkey-overlay #wormkey-panel{max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch}#wormkey-overlay .wormkey-bar{flex-wrap:wrap;height:auto;min-height:40px;padding:6px;gap:6px}#wormkey-overlay .wormkey-bar .tabbar-btn{padding:8px 10px;min-height:40px;font-size:11px;touch-action:manipulation}#wormkey-overlay .wormkey-bar>div:first-child{touch-action:none}#wormkey-overlay .wormkey-row p{font-size:11px;padding:8px}#wormkey-overlay .wormkey-row button{padding:8px 10px;font-size:11px;min-height:36px;touch-action:manipulation}#wormkey-overlay .wormkey-row .wormkey-copy-btn{min-width:36px;min-height:36px}}';
+    styleEl.textContent = '@keyframes tabbar-shield-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}#wormkey-overlay .tabbar-connected:hover .tabbar-shield{animation:tabbar-shield-spin .6s ease-in-out}#wormkey-overlay .tabbar-views .tabbar-eye{transform-origin:center;transition:transform .2s ease-out}#wormkey-overlay .tabbar-views:hover .tabbar-eye{transform:scaleY(.15)}#wormkey-overlay .tabbar-btn:hover{background:rgba(255,255,255,0.03)}#wormkey-overlay .tabbar-connected.tabbar-btn:hover,#wormkey-overlay .tabbar-views.tabbar-btn:hover{background:rgba(255,255,255,0.03)}#wormkey-overlay[data-theme="light"] #wormkey-panel{background:rgba(255,255,255,0.95);border:1px solid rgba(0,0,0,0.08)}#wormkey-overlay[data-theme="light"] .wormkey-bar{background:rgba(255,255,255,0.95);border:1px solid rgba(0,0,0,0.08);color:#1a1a1a}#wormkey-overlay[data-theme="light"] .wormkey-row{background:rgba(0,0,0,0.04)}#wormkey-overlay[data-theme="light"] .wormkey-row p span:first-child{color:rgba(0,0,0,0.8)!important}#wormkey-overlay[data-theme="light"] .wormkey-row p span:last-child{color:rgba(0,0,0,0.5)!important}#wormkey-overlay[data-theme="light"] .wormkey-copy-btn{background:rgba(0,0,0,0.12);color:#1a1a1a}#wormkey-overlay[data-theme="light"] .tabbar-btn{color:#1a1a1a}#wormkey-overlay[data-theme="light"] .tabbar-btn:hover{background:rgba(0,0,0,0.06)}#wormkey-overlay[data-theme="light"] .tabbar-btn.tabbar-active{background:rgba(0,0,0,0.12)!important}#wormkey-overlay[data-theme="light"] .wormkey-divider{background:rgba(0,0,0,0.15)!important}#wormkey-overlay[data-theme="light"] .wormkey-logs-list,#wormkey-overlay[data-theme="light"] .wormkey-views-list{color:rgba(0,0,0,0.6)!important}#wormkey-overlay[data-theme="light"] .wormkey-views-list .wormkey-view-row{background:rgba(0,0,0,0.04)!important;color:rgba(0,0,0,0.7)!important}#wormkey-overlay[data-theme="light"] .wormkey-views-empty{color:rgba(0,0,0,0.4)!important}@media(prefers-reduced-motion:reduce){#wormkey-overlay .tabbar-shield,#wormkey-overlay .tabbar-eye{animation:none!important;transition:none!important}}@media(max-width:480px){#wormkey-overlay{bottom:max(10px,env(safe-area-inset-bottom))!important;left:max(8px,env(safe-area-inset-left))!important;right:max(8px,env(safe-area-inset-right))!important;transform:none!important;width:auto!important;max-width:none!important}#wormkey-overlay #wormkey-panel{max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch}#wormkey-overlay .wormkey-bar{flex-wrap:wrap;height:auto;min-height:40px;padding:6px;gap:6px}#wormkey-overlay .wormkey-bar .tabbar-btn{padding:8px 10px;min-height:40px;font-size:11px;touch-action:manipulation}#wormkey-overlay .wormkey-bar>div:first-child{touch-action:none}#wormkey-overlay .wormkey-row p{font-size:11px;padding:8px}#wormkey-overlay .wormkey-row button{padding:8px 10px;font-size:11px;min-height:36px;touch-action:manipulation}#wormkey-overlay .wormkey-row .wormkey-copy-btn{min-width:36px;min-height:36px}}';
     document.head.appendChild(styleEl);
 
     var root = document.createElement('div');
@@ -133,12 +144,14 @@
     var logsContent = document.createElement('div');
     logsContent.style.cssText = 'display:flex;flex-direction:column;gap:4px;padding:4px';
     var logsList = document.createElement('div');
+    logsList.className = 'wormkey-logs-list';
     logsList.style.cssText = 'font:10px "Geist",sans-serif;color:rgba(255,255,255,0.6);line-height:1.6;max-height:120px;overflow-y:auto';
     logsContent.appendChild(logsList);
 
     var viewsContent = document.createElement('div');
     viewsContent.style.cssText = 'display:flex;flex-direction:column;gap:4px;padding:4px';
     var viewsList = document.createElement('div');
+    viewsList.className = 'wormkey-views-list';
     viewsList.style.cssText = 'font:10px "Geist",sans-serif;color:rgba(255,255,255,0.6);max-height:120px;overflow-y:auto';
     viewsContent.appendChild(viewsList);
 
@@ -188,6 +201,7 @@
     bar.appendChild(closeBtn);
 
     var divider = document.createElement('div');
+    divider.className = 'wormkey-divider';
     divider.style.cssText = 'width:1px;height:100%;background:rgba(255,255,255,0.2);flex-shrink:0';
     bar.appendChild(divider);
 
@@ -230,12 +244,16 @@
       logsContent.style.display = activeTab === 'logs' ? 'flex' : 'none';
       viewsContent.style.display = activeTab === 'views' ? 'flex' : 'none';
       var isActive = panelOpen;
+      [copyTabBtn,logsTabBtn,viewsTabBtn].forEach(function(btn){ btn.classList.remove('tabbar-active'); });
       copyTabBtn.style.background = isActive && activeTab === 'copy' ? 'rgba(255,255,255,0.15)' : 'transparent';
       copyTabBtn.style.opacity = isActive && activeTab === 'copy' ? '1' : '0.5';
+      if (isActive && activeTab === 'copy') copyTabBtn.classList.add('tabbar-active');
       logsTabBtn.style.background = isActive && activeTab === 'logs' ? 'rgba(255,255,255,0.15)' : 'transparent';
       logsTabBtn.style.opacity = isActive && activeTab === 'logs' ? '1' : '0.5';
+      if (isActive && activeTab === 'logs') logsTabBtn.classList.add('tabbar-active');
       viewsTabBtn.style.background = isActive && activeTab === 'views' ? 'rgba(255,255,255,0.15)' : 'transparent';
       viewsTabBtn.style.opacity = isActive && activeTab === 'views' ? '1' : '0.5';
+      if (isActive && activeTab === 'views') viewsTabBtn.classList.add('tabbar-active');
     }
 
     function refresh(){
@@ -255,12 +273,14 @@
         viewsList.innerHTML = '';
         (s.viewers || []).forEach(function(v){
           var row = document.createElement('div');
+          row.className = 'wormkey-view-row';
           row.style.cssText = 'padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.02);margin-bottom:2px';
           row.textContent = (v.id || '?') + ' — ' + (v.requests || 0) + ' requests' + (v.ip ? ' · ' + v.ip : '');
           viewsList.appendChild(row);
         });
         if (!s.viewers || s.viewers.length === 0) {
           var empty = document.createElement('div');
+          empty.className = 'wormkey-views-empty';
           empty.style.cssText = 'padding:10px;color:rgba(255,255,255,0.4)';
           empty.textContent = 'No viewers yet';
           viewsList.appendChild(empty);
@@ -302,6 +322,11 @@
     root.appendChild(panel);
     root.appendChild(bar);
 
+    applyTheme();
+    var themeMq = window.matchMedia('(prefers-color-scheme: light)');
+    themeMq.addEventListener('change', applyTheme);
+    var themeObs = new MutationObserver(applyTheme);
+    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
     setTab();
     refresh();
     setInterval(refresh, 3000);

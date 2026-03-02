@@ -318,7 +318,9 @@ function ThemeToggle({ isDark, onClick }: { isDark: boolean; onClick: () => void
 
 /** Demo of the owner control bar. Keep in sync with packages/gateway/overlay.js. Figma: node-id=1533-250 */
 function DemoControlBar({ onClose }: { onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<"copy" | "logs">("copy");
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light"; // follows next-themes (html.dark / html.light)
+  const [activeTab, setActiveTab] = useState<"copy" | "logs" | "views">("copy");
   const [panelOpen, setPanelOpen] = useState(false);
   const [viewers] = useState(3);
   const [position, setPosition] = useState<{ x?: number; bottom?: number; center?: boolean }>({ bottom: 10, center: true });
@@ -378,67 +380,77 @@ function DemoControlBar({ onClose }: { onClose: () => void }) {
       ref={overlayRef}
       id="wormkey-demo-bar"
       data-wormkey-overlay
+      data-theme={isLight ? "light" : "dark"}
       className="fixed z-[2147483647] flex w-fit min-w-[380px] max-w-[calc(100vw-20px)] flex-col items-stretch justify-end gap-1"
       style={barStyle}
     >
       {/* Tab content panel - hidden until tab clicked */}
       {panelOpen && (
-      <div className="flex w-full min-w-0 min-h-[44px] flex-col gap-1 rounded-[10px] bg-[rgba(109,109,109,0.2)] p-1 backdrop-blur-[5px]">
+      <div className={`flex w-full min-w-0 min-h-[44px] flex-col gap-1 rounded-[10px] p-1 backdrop-blur-[5px] ${isLight ? "bg-white/95 border border-black/[0.08]" : "bg-[rgba(109,109,109,0.2)]"}`}>
         <div className={activeTab === "copy" ? "flex flex-col gap-1" : "hidden"}>
-          <div className="flex min-w-0 items-center overflow-hidden rounded-md bg-white/[0.02] p-2.5">
-            <p className="min-w-0 flex-1 truncate text-[10px] font-medium text-white/80">
-              Main_Url: <span className="text-white/50">{mainUrl}</span>
+          <div className={`flex min-w-0 items-center overflow-hidden rounded-md p-2.5 ${isLight ? "bg-black/[0.04]" : "bg-white/[0.02]"}`}>
+            <p className={`min-w-0 flex-1 truncate text-[10px] font-medium ${isLight ? "text-black/80" : "text-white/80"}`}>
+              Main_Url: <span className={isLight ? "text-black/50" : "text-white/50"}>{mainUrl}</span>
             </p>
             <button
               onClick={() => {
                 navigator.clipboard?.writeText(mainUrl);
               }}
-              className="ml-2 shrink-0 rounded-md bg-white/15 px-2.5 py-1 text-[10px] hover:bg-white/20"
+              className={`ml-2 shrink-0 rounded-md px-2.5 py-1 text-[10px] ${isLight ? "bg-black/12 text-[#1a1a1a] hover:bg-black/18" : "bg-white/15 hover:bg-white/20"}`}
             >
               Copy
             </button>
           </div>
-          <div className="flex min-w-0 items-center overflow-hidden rounded-md bg-white/[0.02] p-2.5">
-            <p className="min-w-0 flex-1 truncate text-[10px] font-medium text-white/80">
-              Owner: <span className="text-white/50">{ownerUrl}</span>
+          <div className={`flex min-w-0 items-center overflow-hidden rounded-md p-2.5 ${isLight ? "bg-black/[0.04]" : "bg-white/[0.02]"}`}>
+            <p className={`min-w-0 flex-1 truncate text-[10px] font-medium ${isLight ? "text-black/80" : "text-white/80"}`}>
+              Owner: <span className={isLight ? "text-black/50" : "text-white/50"}>{ownerUrl}</span>
             </p>
-            <button className="ml-2 shrink-0 rounded-md bg-white/15 px-2.5 py-1 text-[10px] hover:bg-white/20">
+            <button className={`ml-2 shrink-0 rounded-md px-2.5 py-1 text-[10px] ${isLight ? "bg-black/12 text-[#1a1a1a] hover:bg-black/18" : "bg-white/15 hover:bg-white/20"}`}>
               Copy
             </button>
           </div>
         </div>
-        <div className={activeTab === "logs" ? "flex items-center p-2.5 text-[10px] text-white/50" : "hidden"}>
+        <div className={activeTab === "logs" ? `flex items-center p-2.5 text-[10px] ${isLight ? "text-black/60" : "text-white/50"}` : "hidden"}>
           Logs will appear here.
+        </div>
+        <div className={activeTab === "views" ? `flex flex-col gap-1 p-2.5 text-[10px] ${isLight ? "text-black/60" : "text-white/50"}` : "hidden"}>
+          <div className={isLight ? "text-black/40" : "text-white/40"}>No viewers yet</div>
         </div>
       </div>
       )}
       {/* Tab bar */}
-      <div className="flex h-10 items-stretch gap-1 rounded-[10px] bg-[rgba(109,109,109,0.6)] p-1 text-[10px] font-medium text-white backdrop-blur-[20px]">
+      <div className={`flex h-10 items-stretch gap-1 rounded-[10px] p-1 text-[10px] font-medium backdrop-blur-[20px] ${isLight ? "bg-white/95 border border-black/[0.08] text-[#1a1a1a]" : "bg-[rgba(109,109,109,0.6)] text-white"}`}>
         <div
           role="button"
           tabIndex={0}
           onMouseDown={handleDragStart}
-          className={`flex select-none items-center rounded-md px-2.5 opacity-50 transition-colors ${dragging ? "cursor-grabbing" : "cursor-grab"} hover:bg-white/[0.03]`}
+          className={`flex select-none items-center rounded-md px-2.5 opacity-50 transition-colors ${dragging ? "cursor-grabbing" : "cursor-grab"} ${isLight ? "hover:bg-black/[0.06]" : "hover:bg-white/[0.03]"}`}
           title="Drag to move; click to close panel"
         >
           Wormkey
         </div>
         <button
           onClick={() => { setActiveTab("copy"); setPanelOpen(true); }}
-          className={`flex items-center justify-center rounded-md px-2.5 transition-colors ${panelOpen && activeTab === "copy" ? "bg-white/15" : "opacity-50"} hover:bg-white/[0.03] hover:opacity-100`}
+          className={`flex items-center justify-center rounded-md px-2.5 transition-colors ${panelOpen && activeTab === "copy" ? (isLight ? "bg-black/12" : "bg-white/15") : "opacity-50"} ${isLight ? "hover:bg-black/[0.06]" : "hover:bg-white/[0.03]"} hover:opacity-100`}
         >
           Copy Url
         </button>
         <button
           onClick={() => { setActiveTab("logs"); setPanelOpen(true); }}
-          className={`flex items-center justify-center rounded-md px-2.5 transition-colors ${panelOpen && activeTab === "logs" ? "bg-white/15" : "opacity-50"} hover:bg-white/[0.03] hover:opacity-100`}
+          className={`flex items-center justify-center rounded-md px-2.5 transition-colors ${panelOpen && activeTab === "logs" ? (isLight ? "bg-black/12" : "bg-white/15") : "opacity-50"} ${isLight ? "hover:bg-black/[0.06]" : "hover:bg-white/[0.03]"} hover:opacity-100`}
         >
           Logs
         </button>
-        <button onClick={onClose} className="flex items-center rounded-md px-2.5 opacity-50 transition-colors hover:bg-white/[0.03] hover:opacity-70">
+        <button
+          onClick={() => { setActiveTab("views"); setPanelOpen(true); }}
+          className={`flex items-center justify-center rounded-md px-2.5 transition-colors ${panelOpen && activeTab === "views" ? (isLight ? "bg-black/12" : "bg-white/15") : "opacity-50"} ${isLight ? "hover:bg-black/[0.06]" : "hover:bg-white/[0.03]"} hover:opacity-100`}
+        >
+          Views
+        </button>
+        <button onClick={onClose} className={`flex items-center rounded-md px-2.5 opacity-50 transition-colors ${isLight ? "hover:bg-black/[0.06]" : "hover:bg-white/[0.03]"} hover:opacity-70`}>
           Close Tunnel
         </button>
-        <div className="w-px shrink-0 self-stretch bg-white/20" />
+        <div className={`w-px shrink-0 self-stretch ${isLight ? "bg-black/15" : "bg-white/20"}`} />
         <div className="tabbar-connected flex cursor-default items-center gap-1.5 px-2.5">
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="shrink-0 tabbar-shield">
             <path d="M8.04151 2.52766L5.69751 1.09866C5.26701 0.837156 4.73251 0.836656 4.30201 1.09866L1.95801 2.52716C1.52101 2.79366 1.24951 3.29266 1.24951 3.82916V6.16866C1.24951 6.70566 1.52101 7.20466 1.95801 7.47066L4.30201 8.89966C4.51701 9.03066 4.75851 9.09616 4.99951 9.09616C5.24051 9.09616 5.48201 9.03066 5.69701 8.89966L8.04101 7.47116C8.47801 7.20466 8.74951 6.70566 8.74951 6.16916V3.82966C8.74951 3.29266 8.47851 2.79366 8.04151 2.52766ZM7.14201 3.80966L4.76701 6.80966C4.67551 6.92516 4.53801 6.99466 4.39051 6.99916C4.38551 6.99916 4.38001 6.99916 4.37501 6.99916C4.23351 6.99916 4.09801 6.93916 4.00351 6.83366L2.87851 5.58366C2.69401 5.37816 2.71051 5.06216 2.91551 4.87766C3.12101 4.69266 3.43651 4.70966 3.62151 4.91466L4.35051 5.72466L6.35801 3.18916C6.52951 2.97316 6.84351 2.93616 7.06051 3.10716C7.27701 3.27866 7.31351 3.59316 7.14201 3.80966Z" fill="#5BFF6D" />
