@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Agentation } from "agentation";
 import "./globals.css";
 import { ThemeProvider } from "./ThemeProvider";
 // import { WormkeyOverlay } from "wormkey";
-// import Script from "next/script";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Wormkey — Open a wormhole to your localhost",
@@ -41,8 +42,9 @@ export default function RootLayout({
         <ThemeProvider>
           {children}
           {process.env.NODE_ENV === "development" && <Agentation />}
-          {/* <WormkeyOverlay slug="swift-dawn-84" /> */}
-          {/* <Script defer src="https://t.wormkey.run/.wormkey/overlay.js?slug=swift-dawn-84"></Script> */}
+          {/* <WormkeyOverlay slug="swift-dawn-84" />
+          <Script defer src="https://t.wormkey.run/.wormkey/overlay.js?slug=swift-dawn-84"></Script> */}
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>
