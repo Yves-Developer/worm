@@ -228,7 +228,7 @@ function PartRow({
     <div
       ref={popoverRef}
       className="relative flex items-center justify-center"
-      onBlur={compact ? handleFocusOut : undefined}
+      onBlur={compact && !hidePopover ? handleFocusOut : undefined}
     >
       <PartIcon
         part={part}
