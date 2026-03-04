@@ -25,6 +25,37 @@ body {
   overflow-x: hidden;
 }
 
+/* Apple squircle - smooth rounded corners */
+.squircle {
+  border-radius: 20px;
+  corner-shape: squircle;
+}
+
+/* Custom color picker - match mascot bar aesthetic */
+.color-picker-mascot {
+  --react-colorful__hue-pointer-width: 12px;
+  --react-colorful__hue-pointer-height: 12px;
+  --react-colorful__saturation-pointer-width: 16px;
+  --react-colorful__saturation-pointer-height: 16px;
+}
+.color-picker-mascot .react-colorful__saturation {
+  border-radius: 8px;
+}
+.color-picker-mascot .react-colorful__hue {
+  height: 10px;
+  border-radius: 5px;
+  margin-top: 8px;
+}
+
+@keyframes flash {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 body {
   font-family: "Open Runde", system-ui, sans-serif;
   background-color: var(--bg);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { WormMascot } from "../components/WormMascot";
+import { BlogMascot } from "./BlogMascot";
 
 export const metadata = {
   title: "How Wormkey works — and why I built it",
@@ -29,12 +29,20 @@ export default function BlogPage() {
           </header>
 
           <div className="space-y-6 text-[var(--fg)] text-[15px] leading-relaxed">
+            <h2 className="text-lg font-semibold mb-4 text-[var(--fg)]">
+              Why I built it
+            </h2>
+
             <p>
-              I kept running into the same problem: I’d spin up a local app, want to share it with a teammate or client, and then hit a wall. Ngrok wanted me to sign up. Cloudflare Tunnel felt heavy. Some tools needed a dashboard, others wanted me to configure DNS. All I wanted was a link.
+              A friend of mine couldn't share his demo because of something to do with Vercel. I don't know why exactly, but we tried a lot of things and couldn't get it to work. So I built Wormkey.
             </p>
 
             <p>
-              So I built Wormkey. One command, one URL. No account, no dashboard, no friction.
+              It's <strong>much faster</strong> than ngrok or Cloudflare Tunnel. It's <strong>more accessible for non-developers</strong> — no signup, no dashboard, no DNS. Just run a command and share the link. Easy.
+            </p>
+
+            <p>
+              It's not a deploy platform. It's not a hosting provider. It's a controlled wormhole from your laptop to the internet. When you're done, you close the tunnel and it's gone.
             </p>
 
             <h2 className="text-lg font-semibold mt-10 mb-4 text-[var(--fg)]">
@@ -62,16 +70,141 @@ export default function BlogPage() {
             </p>
 
             <h2 className="text-lg font-semibold mt-10 mb-4 text-[var(--fg)]">
-              Why it exists
+              Architecture
             </h2>
 
             <p>
-              I wanted a tunnel tool that felt like <code className="rounded bg-[var(--code-bg)] px-1.5 py-0.5 text-[13px] font-mono">python -m http.server</code> — zero setup, instant share. Wormkey is that. Install it, run it, share the link. Done.
+              Here’s how the pieces fit together:
             </p>
 
-            <p>
-              It’s not a deploy platform. It’s not a hosting provider. It’s a controlled wormhole from your laptop to the internet. When you’re done, you close the tunnel and it’s gone.
-            </p>
+            <div className="my-8 overflow-x-auto rounded-lg bg-[var(--code-bg)] p-6">
+              <svg
+                viewBox="0 0 520 220"
+                className="w-full min-w-[400px]"
+                aria-label="Wormkey architecture diagram"
+              >
+                <defs>
+                  <marker
+                    id="arrowhead"
+                    markerWidth="8"
+                    markerHeight="6"
+                    refX="7"
+                    refY="3"
+                    orient="auto"
+                  >
+                    <polygon
+                      points="0 0, 8 3, 0 6"
+                      fill="var(--muted-fg)"
+                    />
+                  </marker>
+                </defs>
+                {/* Viewer */}
+                <rect
+                  x="20"
+                  y="20"
+                  width="90"
+                  height="50"
+                  rx="6"
+                  fill="var(--bg)"
+                  stroke="var(--border)"
+                  strokeWidth="1.5"
+                />
+                <text x="65" y="50" textAnchor="middle" fill="var(--fg)" fontSize="11" fontWeight="500">
+                  Viewer
+                </text>
+                <text x="65" y="64" textAnchor="middle" fill="var(--muted-fg)" fontSize="9">
+                  browser
+                </text>
+
+                {/* Edge Gateway */}
+                <rect
+                  x="165"
+                  y="20"
+                  width="100"
+                  height="50"
+                  rx="6"
+                  fill="var(--code-bg)"
+                  stroke="var(--border)"
+                  strokeWidth="1.5"
+                />
+                <text x="215" y="50" textAnchor="middle" fill="var(--fg)" fontSize="11" fontWeight="500">
+                  Edge Gateway
+                </text>
+                <text x="215" y="64" textAnchor="middle" fill="var(--muted-fg)" fontSize="9">
+                  TLS, routing
+                </text>
+
+                {/* CLI */}
+                <rect
+                  x="310"
+                  y="20"
+                  width="90"
+                  height="50"
+                  rx="6"
+                  fill="var(--bg)"
+                  stroke="var(--border)"
+                  strokeWidth="1.5"
+                />
+                <text x="355" y="50" textAnchor="middle" fill="var(--fg)" fontSize="11" fontWeight="500">
+                  CLI
+                </text>
+                <text x="355" y="64" textAnchor="middle" fill="var(--muted-fg)" fontSize="9">
+                  wormkey
+                </text>
+
+                {/* Localhost */}
+                <rect
+                  x="445"
+                  y="20"
+                  width="75"
+                  height="50"
+                  rx="6"
+                  fill="var(--bg)"
+                  stroke="var(--border)"
+                  strokeWidth="1.5"
+                />
+                <text x="482" y="50" textAnchor="middle" fill="var(--fg)" fontSize="11" fontWeight="500">
+                  localhost
+                </text>
+                <text x="482" y="64" textAnchor="middle" fill="var(--muted-fg)" fontSize="9">
+                  :3000
+                </text>
+
+                {/* Control Plane */}
+                <rect
+                  x="185"
+                  y="130"
+                  width="110"
+                  height="50"
+                  rx="6"
+                  fill="var(--bg)"
+                  stroke="var(--border)"
+                  strokeWidth="1.5"
+                />
+                <text x="240" y="160" textAnchor="middle" fill="var(--fg)" fontSize="11" fontWeight="500">
+                  Control Plane
+                </text>
+                <text x="240" y="174" textAnchor="middle" fill="var(--muted-fg)" fontSize="9">
+                  session, slug
+                </text>
+
+                {/* Arrows: Viewer → Gateway */}
+                <line x1="110" y1="45" x2="165" y2="45" stroke="var(--muted-fg)" strokeWidth="1.5" markerEnd="url(#arrowhead)" />
+                <text x="137" y="38" fill="var(--muted-fg)" fontSize="8">HTTPS</text>
+
+                {/* Arrows: Gateway → CLI */}
+                <line x1="310" y1="45" x2="265" y2="45" stroke="var(--muted-fg)" strokeWidth="1.5" markerEnd="url(#arrowhead)" />
+                <text x="287" y="38" fill="var(--muted-fg)" fontSize="8">WebSocket</text>
+
+                {/* Arrows: CLI → Localhost */}
+                <line x1="400" y1="45" x2="445" y2="45" stroke="var(--muted-fg)" strokeWidth="1.5" markerEnd="url(#arrowhead)" />
+                <text x="420" y="38" fill="var(--muted-fg)" fontSize="8">HTTP</text>
+
+                {/* Arrows: CLI → Control Plane (get slug) */}
+                <path d="M 310 70 L 270 130" stroke="var(--muted-fg)" strokeWidth="1.5" fill="none" strokeDasharray="4 2" markerEnd="url(#arrowhead)" />
+                <text x="275" y="102" fill="var(--muted-fg)" fontSize="8">get slug</text>
+              </svg>
+            </div>
 
             <p>
               If that sounds useful, give it a try:
@@ -88,7 +221,7 @@ export default function BlogPage() {
         </article>
 
         <div className="mt-16 flex justify-center">
-          <WormMascot variant={2} className="opacity-60" />
+          <BlogMascot />
         </div>
 
         <div className="mt-12 text-center">

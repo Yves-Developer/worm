@@ -6,6 +6,14 @@ type State = "idle" | "searching" | "hover";
 
 export type WormVariant = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
+export type WormColors = {
+  body: string;
+  eyes: string;
+  pupil: string;
+  teeth: string;
+  antenna: string;
+};
+
 export const MASCOT_VARIANT_SWATCHES: Record<WormVariant, string> = {
   1: "#D9D9D9",
   2: "#FFEA2A",
@@ -33,9 +41,9 @@ const COLOR_VARIANTS: Record<
   9: { body: "#059669", eyes: "#6EE7B7", pupil: "#064E3B", teeth: "#34D399", antenna: "#10B981" },
 };
 
-const EYE_CX = 20.2002;
-const EYE_CY = 23.8;
-const PUPIL_MAX_OFFSET = 2.2;
+export const EYE_CX = 20.2002;
+export const EYE_CY = 23.8;
+export const PUPIL_MAX_OFFSET = 2.2;
 
 const STATE_VALUES = {
   idle: {
@@ -66,23 +74,42 @@ const TRANSITION = "transform 280ms cubic-bezier(0.4, 0, 0.2, 1)";
 export function WormMascot({
   className,
   variant = 1,
+  customColors,
   shakeTrigger = 0,
+  svgRef,
+  lookAt,
+  forceState,
 }: {
   className?: string;
   variant?: WormVariant;
+  customColors?: WormColors;
   shakeTrigger?: number;
+  svgRef?: React.RefObject<SVGSVGElement | null>;
+  /** When set, worm looks at this point (svg coords) instead of cursor. Use for capture pose. */
+  lookAt?: { x: number; y: number };
+  /** When set, overrides state for capture (e.g. "idle" for neutral pose). */
+  forceState?: State;
 }) {
-  const colors = COLOR_VARIANTS[variant];
+  const colors = customColors ?? COLOR_VARIANTS[variant];
   const [state, setState] = useState<State>("idle");
+  const effectiveState = forceState ?? state;
   const [pupilOffset, setPupilOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
-  const v = STATE_VALUES[state];
+  const v = STATE_VALUES[effectiveState];
 
   const onMouseEnter = useCallback(() => setState("hover"), []);
   const onMouseLeave = useCallback(() => setState("idle"), []);
 
-  // Eyes follow cursor
+  // When lookAt is set (e.g. for capture), use it; otherwise eyes follow cursor
   useEffect(() => {
+    if (lookAt) {
+      const dx = lookAt.x - EYE_CX;
+      const dy = lookAt.y - EYE_CY;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const scale = Math.min(1, PUPIL_MAX_OFFSET / dist);
+      setPupilOffset({ x: dx * scale, y: dy * scale });
+      return;
+    }
     const onMove = (e: MouseEvent) => {
       const el = containerRef.current;
       if (!el) return;
@@ -99,20 +126,20 @@ export function WormMascot({
     };
     window.addEventListener("mousemove", onMove);
     return () => window.removeEventListener("mousemove", onMove);
-  }, []);
+  }, [lookAt]);
 
-  // Cycle to searching periodically when idle
+  // Cycle to searching periodically when idle (skip when forceState overrides)
   useEffect(() => {
-    if (state !== "idle") return;
+    if (forceState || state !== "idle") return;
     const t = setTimeout(() => setState("searching"), 3000);
     return () => clearTimeout(t);
   }, [state]);
 
   useEffect(() => {
-    if (state !== "searching") return;
+    if (forceState || state !== "searching") return;
     const t = setTimeout(() => setState("idle"), 1500);
     return () => clearTimeout(t);
-  }, [state]);
+  }, [forceState, state]);
 
   const [isShaking, setIsShaking] = useState(false);
   useEffect(() => {
@@ -133,6 +160,7 @@ export function WormMascot({
       onMouseLeave={onMouseLeave}
     >
       <svg
+        ref={svgRef}
         width="40"
         height="47"
         viewBox="0 0 40 47"
@@ -219,7 +247,7 @@ export function WormMascot({
 
         {/* Antennae - idle (straight X) */}
         <g
-          className={`worm-transition ${state === "hover" ? "worm-antenna-hover" : ""}`}
+          className={`worm-transition ${effectiveState === "hover" ? "worm-antenna-hover" : ""}`}
           style={{
             opacity: v.antennae === "idle" ? 1 : 0,
             transition: "opacity 250ms cubic-bezier(0.4, 0, 0.2, 1)",
@@ -244,7 +272,7 @@ export function WormMascot({
 
         {/* Antennae - tilted (searching/hover) */}
         <g
-          className={`worm-transition ${state === "hover" ? "worm-antenna-hover" : ""}`}
+          className={`worm-transition ${effectiveState === "hover" ? "worm-antenna-hover" : ""}`}
           style={{
             opacity: v.antennae === "tilted" ? 1 : 0,
             transition: "opacity 250ms cubic-bezier(0.4, 0, 0.2, 1)",
