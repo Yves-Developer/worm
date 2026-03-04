@@ -186,6 +186,7 @@ function PartRow({
   onToggle,
   onClose,
   compact,
+  hidePopover,
 }: {
   part: keyof WormColors;
   color: string;
@@ -196,6 +197,8 @@ function PartRow({
   onToggle: () => void;
   onClose: () => void;
   compact?: boolean;
+  /** When true, popover is rendered elsewhere (e.g. inline in mobile bar) */
+  hidePopover?: boolean;
 }) {
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -211,7 +214,7 @@ function PartRow({
   };
 
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive || hidePopover) return;
     const handleClickOutside = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
         onClose();
@@ -219,19 +222,23 @@ function PartRow({
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isActive, onClose]);
+  }, [isActive, onClose, hidePopover]);
 
   return (
-    <div ref={popoverRef} className="relative flex items-center justify-center" onBlur={handleFocusOut}>
+    <div
+      ref={popoverRef}
+      className="relative flex items-center justify-center"
+      onBlur={compact ? handleFocusOut : undefined}
+    >
       <PartIcon
         part={part}
         displayColor={displayColor}
         onClick={handleOpen}
-        onFocus={handleOpen}
+        onFocus={compact ? handleOpen : undefined}
         isActive={isActive}
         compact={compact}
       />
-      {isActive && (
+      {isActive && !hidePopover && (
         <div
           className={`absolute z-30 ${
             compact
@@ -243,8 +250,8 @@ function PartRow({
             <HexColorPicker
               color={color}
               onChange={onColorChange}
-              style={{ width: compact ? 200 : 180, height: compact ? 48 : 72 }}
-              className={`color-picker-mascot color-picker-slider ${compact ? "color-picker-mobile-slider" : ""}`}
+              style={{ width: compact ? 200 : 140, height: compact ? 48 : 140 }}
+              className={`color-picker-mascot ${compact ? "color-picker-slider color-picker-mobile-slider" : ""}`}
             />
             <div className="mt-1.5 text-center text-[10px] font-medium text-white/90">
               {color}
@@ -380,9 +387,10 @@ export default function MascotPage() {
       </Link>
 
       {/* Top center: Worm | Custom tabs - same size as Back link */}
-      <div className="fixed left-1/2 top-4 -translate-x-1/2 md:top-6">
+      <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 md:top-6">
         <div className="flex rounded-full bg-[rgba(109,109,109,0.6)] p-0.5 backdrop-blur-[20px]">
           <button
+            type="button"
             onClick={() => setMode("worm")}
             className={`rounded-full px-2.5 py-1 text-sm font-medium transition-colors md:px-4 md:py-1.5 ${
               mode === "worm" ? "bg-white/25 text-white" : "text-white/70 hover:text-white"
@@ -391,6 +399,7 @@ export default function MascotPage() {
             Worm
           </button>
           <button
+            type="button"
             onClick={() => setMode("custom")}
             className={`rounded-full px-2.5 py-1 text-sm font-medium transition-colors md:px-4 md:py-1.5 ${
               mode === "custom" ? "bg-white/25 text-white" : "text-white/70 hover:text-white"
@@ -420,7 +429,7 @@ export default function MascotPage() {
       </div>
 
       {/* Mobile: fixed bottom - worm variants straight line, customizer (no look control) */}
-      <div className="fixed bottom-0 left-0 right-0 flex w-full flex-col items-center gap-2 px-4 pb-4 pt-2 md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex w-full flex-col items-center gap-2 px-4 pb-4 pt-2 md:hidden">
         {mode === "worm" ? (
           <div className="flex w-full max-w-full flex-row flex-wrap items-center justify-center gap-1.5">
             {([1, 2, 3, 4, 5, 6, 7, 8, 9] as WormVariant[]).map((v) => (
@@ -437,35 +446,38 @@ export default function MascotPage() {
             ))}
           </div>
         ) : (
-          <div className="flex w-full max-w-full min-w-0 flex-row items-center justify-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="squircle flex flex-row flex-nowrap items-center justify-center gap-1 bg-[rgba(109,109,109,0.6)] px-1.5 py-1.5 backdrop-blur-[20px]">
-              <div className="flex flex-row items-center gap-0.5">
-                {PARTS.map(({ key }) => (
-                  <PartRow
-                    key={key}
-                    part={key}
-                    color={customColors[key]}
-                    displayColor={displayColors[key]}
-                    onColorChange={(v) => {
-                      setColorsRevealed(true);
-                      updateCustomColor(key, v);
-                    }}
-                    onReveal={() => setColorsRevealed(true)}
-                    isActive={activePart === key}
-                    onToggle={() => setActivePart((p) => (p === key ? null : key))}
-                    onClose={() => setActivePart(null)}
-                    compact
-                  />
-                ))}
+          <>
+            <div className="flex w-full max-w-full min-w-0 flex-row items-center justify-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="squircle flex flex-row flex-nowrap items-center justify-center gap-1 bg-[rgba(109,109,109,0.6)] px-1.5 py-1.5 backdrop-blur-[20px]">
+                <div className="flex flex-row items-center gap-0.5">
+                  {PARTS.map(({ key }) => (
+                    <PartRow
+                      key={key}
+                      part={key}
+                      color={customColors[key]}
+                      displayColor={displayColors[key]}
+                      onColorChange={(v) => {
+                        setColorsRevealed(true);
+                        updateCustomColor(key, v);
+                      }}
+                      onReveal={() => setColorsRevealed(true)}
+                      isActive={activePart === key}
+                      onToggle={() => setActivePart((p) => (p === key ? null : key))}
+                      onClose={() => setActivePart(null)}
+                      compact
+                      hidePopover
+                    />
+                  ))}
+                </div>
+                <button
+                  onClick={downloadPng}
+                  className="shrink-0 rounded-lg bg-white/15 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-white/25"
+                >
+                  Generate
+                </button>
               </div>
-              <button
-                onClick={downloadPng}
-                className="shrink-0 rounded-lg bg-white/15 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-white/25"
-              >
-                Generate
-              </button>
             </div>
-          </div>
+          </>
         )}
         <div className="text-sm font-medium text-[var(--muted-fg)]">
           {generatedCount === null ? (
@@ -475,6 +487,38 @@ export default function MascotPage() {
           )}
         </div>
       </div>
+
+      {/* Mobile: color slider overlay - fixed above the bar when a part is selected */}
+      {mode === "custom" && activePart && (
+        <div className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-[320px] md:hidden">
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--bg)] p-3 shadow-lg">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-[var(--fg)]">
+                {PART_LABELS[activePart]}
+              </span>
+              <button
+                type="button"
+                onClick={() => setActivePart(null)}
+                className="rounded px-2 py-1 text-xs text-[var(--muted-fg)] hover:bg-[var(--muted)] hover:text-[var(--fg)]"
+                aria-label="Close"
+              >
+                Done
+              </button>
+            </div>
+            <HexColorPicker
+              color={customColors[activePart]}
+              onChange={(v) => {
+                setColorsRevealed(true);
+                updateCustomColor(activePart, v);
+              }}
+              style={{ width: "100%", height: 120 }}
+            />
+            <div className="mt-2 text-center text-xs text-[var(--muted-fg)]">
+              {customColors[activePart]}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Desktop: count + sidebar fixed right */}
       <div className="fixed bottom-6 left-1/2 hidden -translate-x-1/2 text-sm font-medium text-[var(--muted-fg)] md:block">
