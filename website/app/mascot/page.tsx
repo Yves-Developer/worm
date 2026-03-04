@@ -104,12 +104,14 @@ function PartIcon({
   part,
   displayColor,
   onClick,
+  onFocus,
   isActive,
   compact,
 }: {
   part: keyof WormColors;
   displayColor: string;
   onClick: () => void;
+  onFocus?: () => void;
   isActive?: boolean;
   compact?: boolean;
 }) {
@@ -119,6 +121,7 @@ function PartIcon({
     <button
       type="button"
       onClick={onClick}
+      onFocus={onFocus}
       title={label}
       className={`group relative flex shrink-0 cursor-pointer rounded-lg p-0.5 transition-opacity hover:opacity-90 ${isActive ? "ring-1 ring-white/40 ring-offset-1 ring-offset-transparent" : ""}`}
       aria-label={`${label} color`}
@@ -196,9 +199,15 @@ function PartRow({
 }) {
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const handleClick = () => {
+  const handleOpen = () => {
     onReveal();
     onToggle();
+  };
+
+  const handleFocusOut = (e: React.FocusEvent) => {
+    const next = e.relatedTarget as Node | null;
+    if (next && popoverRef.current?.contains(next)) return;
+    onClose();
   };
 
   useEffect(() => {
@@ -213,11 +222,12 @@ function PartRow({
   }, [isActive, onClose]);
 
   return (
-    <div ref={popoverRef} className="relative flex items-center justify-center">
+    <div ref={popoverRef} className="relative flex items-center justify-center" onBlur={handleFocusOut}>
       <PartIcon
         part={part}
         displayColor={displayColor}
-        onClick={handleClick}
+        onClick={handleOpen}
+        onFocus={handleOpen}
         isActive={isActive}
         compact={compact}
       />
@@ -233,10 +243,10 @@ function PartRow({
             <HexColorPicker
               color={color}
               onChange={onColorChange}
-              style={{ width: compact ? 110 : 140, height: compact ? 110 : 140 }}
-              className="color-picker-mascot"
+              style={{ width: compact ? 140 : 180, height: compact ? 56 : 72 }}
+              className="color-picker-mascot color-picker-slider"
             />
-            <div className="mt-2 text-center text-[10px] font-medium text-white/90">
+            <div className="mt-1.5 text-center text-[10px] font-medium text-white/90">
               {color}
             </div>
           </div>

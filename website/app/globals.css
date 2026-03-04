@@ -33,20 +33,36 @@ body {
   corner-shape: squircle;
 }
 
-/* Custom color picker - match mascot bar aesthetic */
+/* Custom color picker - match mascot bar aesthetic, slider style */
 .color-picker-mascot {
   --react-colorful__hue-pointer-width: 12px;
   --react-colorful__hue-pointer-height: 12px;
-  --react-colorful__saturation-pointer-width: 16px;
-  --react-colorful__saturation-pointer-height: 16px;
+  --react-colorful__saturation-pointer-width: 14px;
+  --react-colorful__saturation-pointer-height: 14px;
 }
 .color-picker-mascot .react-colorful__saturation {
   border-radius: 8px;
 }
 .color-picker-mascot .react-colorful__hue {
-  height: 10px;
-  border-radius: 5px;
+  height: 12px;
+  border-radius: 6px;
   margin-top: 8px;
+}
+/* Slider-style: horizontal bar layout, hue prominent */
+.color-picker-slider {
+  display: flex;
+  flex-direction: column;
+}
+.color-picker-slider .react-colorful__saturation {
+  flex: 0 0 auto;
+  height: 36px;
+  border-radius: 8px;
+}
+.color-picker-slider .react-colorful__hue {
+  flex: 1;
+  min-height: 14px;
+  margin-top: 8px;
+  border-radius: 7px;
 }
 
 @keyframes flash {

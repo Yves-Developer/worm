@@ -9,10 +9,10 @@ export function AnnouncementBar() {
 
   return (
     <div className="border-b border-[var(--border)] bg-[var(--bg)]">
-      <div className="mx-auto flex max-w-xl items-center justify-center px-4">
+      <div className="mx-auto flex max-w-xl items-center justify-center px-4 py-2.5">
         <Link
           href="/blog"
-          className="py-1.5 text-center text-[11px] text-[var(--muted-fg)] transition-colors hover:text-[var(--accent)] touch-manipulation"
+          className="text-center text-sm text-[var(--muted-fg)] transition-colors hover:text-[var(--accent)] touch-manipulation"
         >
           <span className="opacity-70">New:</span>{" "}
           <span className="underline decoration-dotted underline-offset-2">
