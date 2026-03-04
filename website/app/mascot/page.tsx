@@ -123,7 +123,7 @@ function PartIcon({
       onClick={onClick}
       onFocus={onFocus}
       title={label}
-      className={`group relative flex shrink-0 cursor-pointer rounded-lg p-0.5 transition-opacity hover:opacity-90 ${isActive ? "ring-1 ring-white/40 ring-offset-1 ring-offset-transparent" : ""}`}
+      className={`group relative flex shrink-0 cursor-pointer rounded-lg p-0.5 outline-none transition-opacity hover:opacity-90 focus:outline-none focus-visible:outline-none ${compact ? "" : isActive ? "ring-1 ring-white/40 ring-offset-1 ring-offset-transparent" : ""}`}
       aria-label={`${label} color`}
     >
       <svg width={size} height={size} viewBox="0 0 40 40" fill="none" className="block">
@@ -169,7 +169,11 @@ function PartIcon({
           </g>
         )}
       </svg>
-      <span className="pointer-events-none absolute right-full top-1/2 z-20 mr-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[rgba(109,109,109,0.9)] px-2.5 py-1 text-[11px] font-medium text-white/95 shadow-lg backdrop-blur-md opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+      <span
+        className={`pointer-events-none absolute z-20 whitespace-nowrap rounded-lg bg-[rgba(109,109,109,0.9)] px-2.5 py-1 text-[11px] font-medium text-white/95 shadow-lg backdrop-blur-md opacity-0 transition-opacity duration-150 group-hover:opacity-100 ${
+          compact ? "bottom-full left-1/2 mb-1 -translate-x-1/2" : "right-full top-1/2 mr-2 -translate-y-1/2"
+        }`}
+      >
         {label}
       </span>
     </button>
