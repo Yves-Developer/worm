@@ -40,6 +40,8 @@ const (
 	FrameWSClose      = 0x08
 	FramePing         = 0x09
 	FramePong         = 0x0a
+	FramePause        = 0x0b
+	FrameResume       = 0x0c
 	ControlStreamID   = 0
 )
 
@@ -53,6 +55,7 @@ type tunnelConn struct {
 	ownerToken    string
 	streamID      atomic.Uint32
 	activeStreams atomic.Int32
+	paused        atomic.Bool
 	streams       sync.Map   // streamID -> *streamCtx
 	writeMu       sync.Mutex // WebSocket writes must be serialized
 	policyMu      sync.RWMutex
@@ -257,6 +260,10 @@ function wormCycle(){wormI=(wormI+1)%8;var v=wormV[wormI];var d=document;["w-bod
 
 func writeWormholeNotActive(w http.ResponseWriter) {
 	writeErrorPage(w, http.StatusBadGateway, "Wormhole not active", "No tunnel is connected. Run <code>wormkey http &lt;port&gt;</code> to open a wormhole.")
+}
+
+func writeTunnelPaused(w http.ResponseWriter) {
+	writeErrorPage(w, http.StatusServiceUnavailable, "Tunnel paused", "The owner has paused this tunnel. It will resume when they press R.")
 }
 
 func writeInvalidSlug(w http.ResponseWriter) {
@@ -815,6 +822,10 @@ func handleTunnel(tunnels *sync.Map, closedSlugs *sync.Map, controlPlaneURL stri
 				binary.BigEndian.PutUint32(pong[1:5], ControlStreamID)
 				_ = tc.writeFrame(pong)
 			case FramePong:
+			case FramePause:
+				tc.paused.Store(true)
+			case FrameResume:
+				tc.paused.Store(false)
 			case FrameResponseHdrs:
 				if ctx, ok := tc.streams.Load(streamID); ok {
 					sc := ctx.(*streamCtx)
@@ -934,6 +945,10 @@ func handleProxy(tunnels *sync.Map, controlPlaneURL string) http.HandlerFunc {
 					return
 				}
 			}
+		}
+		if !owner && tc.paused.Load() {
+			writeTunnelPaused(w)
+			return
 		}
 		streamID := tc.streamID.Add(1)
 		var buf bytes.Buffer

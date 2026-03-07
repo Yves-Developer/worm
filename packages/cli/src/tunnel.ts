@@ -232,4 +232,12 @@ export class TunnelClient {
     this.ws?.close();
     this.ws = null;
   }
+
+  pause() {
+    this.send(FrameType.PAUSE, CONTROL_STREAM_ID);
+  }
+
+  resume() {
+    this.send(FrameType.RESUME, CONTROL_STREAM_ID);
+  }
 }

@@ -36,6 +36,8 @@ All frames are binary over WebSocket. Each frame has a fixed header:
 | 0x08 | WS_CLOSE | Both | WebSocket close |
 | 0x09 | PING | Both | Keepalive |
 | 0x0A | PONG | Both | Keepalive response |
+| 0x0B | PAUSE | CLI → Edge | Pause tunnel; new requests return 503 |
+| 0x0C | RESUME | CLI → Edge | Resume tunnel |
 
 ---
 

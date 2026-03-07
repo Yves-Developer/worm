@@ -7,3 +7,7 @@ dist/
 
 # Go binaries
 packages/gateway/gateway
+
+release/
+releases/
+RELEASE_NOTES.md

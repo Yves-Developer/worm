@@ -47,11 +47,15 @@ wormkey http 3000
 You'll get a shareable URL:
 
 ```
-Wormhole open.
+Tunnel ready.
+
+Share:
 https://wormkey.run/s/quiet-lime-82
 
-Owner claim URL (open once for controls):
-https://wormkey.run/.wormkey/owner?slug=quiet-lime-82&token=...
+Scan to open
+[QR code]
+
+Press L to open in browser | C to copy | P to pause / R to resume | Q to close
 ```
 
 Share the first URL. Open the owner URL once to enable in-page controls when viewing through the tunnel.
@@ -115,6 +119,9 @@ import "@wormkey/overlay/auto";
 | `wormkey http <port>` | Expose a port via wormhole |
 | `wormkey http 3000 --auth` | Require basic auth |
 | `wormkey http 5173 --expires 30m` | Limit tunnel lifetime |
+| `wormkey status` | Show active tunnel (URL, viewers, uptime) |
+
+**Interactive shortcuts** (when tunnel is running): **L** open in browser · **C** copy URL · **P** pause · **R** resume · **Q** close
 
 ---
 
@@ -173,6 +180,7 @@ For local development, see `.env.example`. Key variables:
 
 ## Documentation
 
+- [CLI Reference](docs/CLI.md) — Full command reference
 - [Protocol](docs/PROTOCOL.md) — Tunnel protocol specification
 - [Deploy](docs/DEPLOY.md) — Production deployment (Render, Vercel)
 

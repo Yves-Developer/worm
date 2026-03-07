@@ -6,12 +6,71 @@
 
 import "dotenv/config";
 import { createRequire } from "module";
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
+import { spawn } from "child_process";
 import { program } from "commander";
+import qrcode from "qrcode-terminal";
 import { TunnelClient } from "./tunnel.js";
 import { createSession } from "./api.js";
+import type { CreateSessionResponse } from "./api.js";
 
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json");
+
+function getSessionStatePath(): string {
+  const dir = process.env.XDG_STATE_HOME
+    ? path.join(process.env.XDG_STATE_HOME, "wormkey")
+    : path.join(os.homedir(), ".wormkey");
+  return path.join(dir, "p.json");
+}
+
+function writeSessionState(
+  controlPlaneUrl: string,
+  session: CreateSessionResponse
+): void {
+  const filePath = getSessionStatePath();
+  const dir = path.dirname(filePath);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    filePath,
+    JSON.stringify({
+      slug: session.slug,
+      controlPlaneUrl,
+      publicUrl: session.publicUrl,
+      startedAt: new Date().toISOString(),
+    }),
+    "utf8"
+  );
+}
+
+function deleteSessionState(): void {
+  try {
+    fs.unlinkSync(getSessionStatePath());
+  } catch {
+    // ignore
+  }
+}
+
+function openUrl(url: string): void {
+  const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+  spawn(cmd, [url], { stdio: "ignore", detached: true }).unref();
+}
+
+function copyToClipboard(text: string): void {
+  const cmd =
+    process.platform === "darwin"
+      ? "pbcopy"
+      : process.platform === "win32"
+        ? "clip"
+        : "xclip";
+  const args = process.platform === "linux" ? ["-selection", "clipboard"] : [];
+  const proc = spawn(cmd, args, { stdio: ["pipe", "ignore", "ignore"] });
+  proc.stdin?.write(text, () => {
+    proc.stdin?.end();
+  });
+}
 
 program
   .name("wormkey")
@@ -78,17 +137,91 @@ program
 
       await tunnel.connect();
 
-      console.log("\nWormhole open.");
-      console.log(session.publicUrl);
-      console.log("\nOwner claim URL (open once):");
+      writeSessionState(controlPlane, session);
+
+      let expirationTimer: ReturnType<typeof setTimeout> | null = null;
+      if (session.expiresAt) {
+        const expiresMs = new Date(session.expiresAt).getTime() - Date.now();
+        if (expiresMs > 0) {
+          expirationTimer = setTimeout(() => {
+            deleteSessionState();
+            console.error("\nTunnel expired.");
+            tunnel.close();
+            process.exit(0);
+          }, expiresMs);
+        }
+      }
+
+      const cleanup = () => {
+        if (expirationTimer) clearTimeout(expirationTimer);
+        deleteSessionState();
+        tunnel.close();
+        process.exit(0);
+      };
+
+      const publicUrl = session.publicUrl;
+
+      console.log("\nTunnel ready.\n");
+      console.log("Share:");
+      console.log(publicUrl);
+      console.log();
+
+      console.log("Scan to open");
+      qrcode.generate(publicUrl, { small: true });
+      console.log();
+
+      if (opts.auth && session.username && session.password) {
+        console.log("Basic auth:");
+        console.log(`  Username: ${session.username}`);
+        console.log(`  Password: ${session.password}`);
+        console.log();
+      }
+
+      console.log("Owner claim URL (open once):");
       console.log(session.ownerUrl);
       console.log("\nPath B integration (add in app layout):");
       console.log(`<script defer src=\"${session.overlayScriptUrl}\"></script>`);
-      console.log("\nPress Ctrl+C to close.\n");
+      console.log();
+
+      const isTty = process.stdin.isTTY;
+      if (isTty) {
+        console.log("Press L to open in browser");
+        console.log("Press C to copy URL");
+        console.log("Press P to pause / R to resume");
+        console.log("Press Q to close");
+        console.log();
+
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+        process.stdin.setEncoding("utf8");
+
+        process.stdin.on("data", (key: string) => {
+          const k = key.toLowerCase();
+          if (k === "q" || k === "\u0003") {
+            process.stdin.setRawMode?.(false);
+            process.stdin.pause();
+            cleanup();
+          } else if (k === "l") {
+            openUrl(publicUrl);
+          } else if (k === "c") {
+            copyToClipboard(publicUrl);
+            console.error("URL copied to clipboard.");
+          } else if (k === "p") {
+            tunnel.pause();
+            console.error("Tunnel paused.");
+          } else if (k === "r") {
+            tunnel.resume();
+            console.error("Tunnel resumed.");
+          }
+        });
+      } else {
+        console.log("Press Ctrl+C to close.\n");
+      }
 
       process.on("SIGINT", () => {
-        tunnel.close();
-        process.exit(0);
+        process.stdin.setRawMode?.(false);
+        process.stdin.pause?.();
+        cleanup();
       });
     } catch (err) {
       console.error("Error:", err instanceof Error ? err.message : err);
@@ -106,8 +239,47 @@ program
 program
   .command("status")
   .description("Show active tunnel status")
-  .action(() => {
-    console.log("Status not implemented in v0.");
+  .action(async () => {
+    const filePath = getSessionStatePath();
+    if (!fs.existsSync(filePath)) {
+      console.log("No active tunnel.");
+      return;
+    }
+    try {
+      const raw = fs.readFileSync(filePath, "utf8");
+      const state = JSON.parse(raw) as {
+        slug: string;
+        controlPlaneUrl: string;
+        publicUrl: string;
+        startedAt: string;
+      };
+      const res = await fetch(
+        `${state.controlPlaneUrl.replace(/\/$/, "")}/sessions/by-slug/${state.slug}`
+      );
+      if (!res.ok) {
+        console.log("Tunnel may have expired.");
+        return;
+      }
+      const session = (await res.json()) as {
+        activeViewers?: Array<{ id: string }>;
+        createdAt?: string;
+      };
+      const viewers = session.activeViewers?.length ?? 0;
+      const startedAt = new Date(state.startedAt).getTime();
+      const uptimeMs = Date.now() - startedAt;
+      const uptimeM = Math.floor(uptimeMs / 60000);
+      const uptimeH = Math.floor(uptimeM / 60);
+      const uptimeMRem = uptimeM % 60;
+      const uptimeStr =
+        uptimeH > 0 ? `${uptimeH}h ${uptimeMRem}m` : `${uptimeM}m`;
+
+      console.log("Tunnel: running");
+      console.log(`URL: ${state.publicUrl}`);
+      console.log(`Viewers: ${viewers}`);
+      console.log(`Uptime: ${uptimeStr}`);
+    } catch {
+      console.log("No active tunnel.");
+    }
   });
 
 program

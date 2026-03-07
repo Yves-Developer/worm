@@ -14,6 +14,8 @@ export const FrameType = {
   WS_CLOSE: 0x08,
   PING: 0x09,
   PONG: 0x0a,
+  PAUSE: 0x0b,
+  RESUME: 0x0c,
 } as const;
 
 export type FrameTypeId = (typeof FrameType)[keyof typeof FrameType];
