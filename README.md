@@ -133,8 +133,8 @@ Run the full stack locally:
 # Terminal 1: Control plane
 cd packages/control-plane && npm install && npm run dev
 
-# Terminal 2: Edge gateway
-cd packages/gateway && go run .
+# Terminal 2: Edge gateway (set WORMKEY_CONTROL_PLANE for local)
+cd packages/gateway && WORMKEY_CONTROL_PLANE=http://localhost:3001 go run .
 
 # Terminal 3: CLI (from repo root)
 cd packages/cli && npm install && npm run build
