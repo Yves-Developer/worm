@@ -54,8 +54,10 @@ function deleteSessionState(): void {
 }
 
 function openUrl(url: string): void {
-  const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
-  spawn(cmd, [url], { stdio: "ignore", detached: true }).unref();
+  const isWin = process.platform === "win32";
+  const cmd = process.platform === "darwin" ? "open" : isWin ? "cmd" : "xdg-open";
+  const args = isWin ? ["/c", "start", url] : [url];
+  spawn(cmd, args, { stdio: "ignore", detached: true }).unref();
 }
 
 function copyToClipboard(text: string): void {
