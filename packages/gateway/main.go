@@ -234,7 +234,11 @@ func resolveSlug(r *http.Request) string {
 		}
 	}
 
-	// Note: Query-based and Cookie-based routing fallbacks removed as per TODO
+	// 3. Query-based (Internal/Tool fallback)
+	if s := r.URL.Query().Get("slug"); s != "" {
+		return s
+	}
+
 	return ""
 }
 
