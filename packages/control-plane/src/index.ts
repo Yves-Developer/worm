@@ -102,7 +102,7 @@ async function main() {
     }
 
     const edgeUrl = `${edgeBase}/tunnel`;
-    const ownerUrl = `${publicBase}/.wormkey/owner?slug=${slug}&token=${ownerToken}`;
+    const ownerUrl = `${publicUrl}/.wormkey/owner?token=${ownerToken}`;
     const overlayScriptUrl = `${publicUrl}/.wormkey/overlay.js`;
 
     const expiresMs =
