@@ -106,8 +106,8 @@ program
         : "wss://t.wormkey.run/tunnel";
 
       const controlPlane =
-        process.env.WORMKEY_CONTROL_PLANE_URL ??
         opts.controlPlane ??
+        process.env.WORMKEY_CONTROL_PLANE_URL ??
         defaultControlPlane;
       console.error("Control plane:", controlPlane);
 
@@ -126,8 +126,8 @@ program
       }
 
       const edgeUrl =
-        process.env.WORMKEY_EDGE_URL ??
         opts.edge ??
+        process.env.WORMKEY_EDGE_URL ??
         session.edgeUrl ??
         defaultEdge;
       console.error("Edge tunnel:", edgeUrl);
