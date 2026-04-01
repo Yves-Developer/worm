@@ -206,12 +206,17 @@ func extractSlugFromHost(host string) string {
 }
 
 func resolveSlug(r *http.Request) string {
-	// 1. Host-based (Primary) - e.g. slug.wormkey.run
+	// 1. Query-based (Highest priority for management tools/claims)
+	if s := r.URL.Query().Get("slug"); s != "" {
+		return s
+	}
+
+	// 2. Host-based (Primary for tunnels) - e.g. slug.wormkey.run
 	if s := extractSlugFromHost(r.Host); s != "" {
 		return s
 	}
 
-	// 2. Path-based (Legacy fallback) - e.g. wormkey.run/s/slug
+	// 3. Path-based (Legacy fallback) - e.g. wormkey.run/s/slug
 	if strings.HasPrefix(r.URL.Path, "/s/") {
 		rest := r.URL.Path[3:] // skip "/s/"
 		idx := strings.Index(rest, "/")
@@ -232,11 +237,6 @@ func resolveSlug(r *http.Request) string {
 			r.URL.RawPath = ""
 			return slug
 		}
-	}
-
-	// 3. Query-based (Internal/Tool fallback)
-	if s := r.URL.Query().Get("slug"); s != "" {
-		return s
 	}
 
 	return ""
