@@ -102,14 +102,8 @@ async function main() {
     }
 
     const edgeUrl = `${edgeBase}/tunnel`;
-    let ownerUrl = `${publicUrl}/.wormkey/owner?token=${ownerToken}`;
-    let overlayScriptUrl = `${publicUrl}/.wormkey/overlay.js`;
-    
-    // Fallback: if not using subdomain, ensure slug is in owner query for path-based routing
-    if (!domain || forcePath) {
-        ownerUrl = `${publicBase}/.wormkey/owner?slug=${slug}&token=${ownerToken}`;
-        overlayScriptUrl = `${publicBase}/.wormkey/overlay.js?slug=${slug}`;
-    }
+    const ownerUrl = `${publicBase}/.wormkey/owner?slug=${slug}&token=${ownerToken}`;
+    const overlayScriptUrl = `${publicUrl}/.wormkey/overlay.js`;
 
     const expiresMs =
       expiresIn.endsWith("m")
